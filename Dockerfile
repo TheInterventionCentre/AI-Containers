@@ -1,16 +1,19 @@
+ARG CUDA="10.2"
+
 FROM nvcr.io/nvidia/cuda:10.2-runtime-ubuntu18.04
 
-RUN apt update && apt upgrade -y
+RUN apt-get -qq update
+# libsm6 and libxext6 are needed for cv2
+RUN apt-get update && apt-get install -y curl libxext6 libsm6 libxrender1 build-essential sudo \
+    libgl1-mesa-glx git wget rsync tmux nano dcmtk fftw3-dev liblapacke-dev libpng-dev libopenblas-dev jq && \
+  rm -rf /var/lib/apt/lists/*
+RUN ldconfig
 
-# Install some basic utilities
-RUN apt-get install -y \
-    curl \
-    ca-certificates \
-    sudo \
-    git \
-    bzip2 \
-    libx11-6 \
- && rm -rf /var/lib/apt/lists/*
+WORKDIR /tmp
+RUN git clone https://github.com/mrirecon/bart.git
+WORKDIR bart
+RUN make -j4
+RUN make install
 
 # Create a working directory
 RUN mkdir /workdir
@@ -31,36 +34,28 @@ RUN chmod 777 /workdir
 ENV CONDA_AUTO_UPDATE_CONDA=false
 ENV PATH=/home/user/miniconda/bin:$PATH
 RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py37_4.8.2-Linux-x86_64.sh \
- && chmod +x ~/miniconda.sh \
- && ~/miniconda.sh -b -p ~/miniconda \
- && rm ~/miniconda.sh \
- && conda install -y python==3.7.9 \
- && conda clean -ya
+&& chmod +x ~/miniconda.sh \
+&& ~/miniconda.sh -b -p ~/miniconda \
+&& rm ~/miniconda.sh \
+&& conda clean -ya
 
-# CUDA 10.2-specific steps
-RUN conda update --all
-RUN conda install -y -c pytorch \
-    cudatoolkit=10.2 \
-    "pytorch=1.5.0=py3.7_cuda10.2.89_cudnn7.6.5_0" \
-    "torchvision=0.6.0=py37_cu102" \
- && conda clean -ya
+RUN conda update -n base conda -yq
+RUN conda install python=3.8
+RUN conda install numpy pyyaml mkl mkl-include setuptools cmake cffi typing boost
+RUN conda install pytorch=1.6 torchvision cudatoolkit=${CUDA} -c pytorch
+RUN conda install scipy pandas scikit-learn scikit-image=0.16 -yq
+RUN conda install cython tqdm jupyter sqlalchemy -yq
+RUN python -m pip install opencv-python simpleitk h5py -q
+RUN python -m pip install runstats -q
+RUN python -m pip install tb-nightly -q
+RUN python -m pip install --pre omegaconf -q
+RUN python -m pip install pyxb
+RUN python -m pip install git+https://github.com/ismrmrd/ismrmrd-python.git
 
-RUN conda install -y -c conda-forge \
-	pytorch-lightning \
-	tqdm \
-	pyyaml \
-	nibabel \
-	matplotlib \
-	scikit-image \
-	scikit-learn \
-	msgpack-python \
-	regex \
-    pip
+ENV PYTHONPATH /tmp/bart/python:/workdir
+ENV PATH "/tmp/bart/:$PATH"
 
-RUN conda install -y \
-	opencv
 
-RUN pip install argparse monai
+# Provide an open entrypoint for the docker
+ENTRYPOINT $0 $@
 
-# Set the default command to python3
-CMD ["python3"]
