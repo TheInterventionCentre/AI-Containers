@@ -8,6 +8,8 @@ RUN apt-get install -y \
     ca-certificates \
     sudo \
     git \
+    vim \
+    nano \
     bzip2 \
     libx11-6 \
  && rm -rf /var/lib/apt/lists/*
@@ -41,26 +43,33 @@ RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py37
 RUN conda update --all
 RUN conda install -y -c pytorch \
     cudatoolkit=10.2 \
-    "pytorch=1.5.0=py3.7_cuda10.2.89_cudnn7.6.5_0" \
-    "torchvision=0.6.0=py37_cu102" \
+    "pytorch=1.7.1=py3.7_cuda10.2.89_cudnn7.6.5_0" \
+    "torchvision=0.8.2=py37_cu102" \
  && conda clean -ya
 
 RUN conda install -y -c conda-forge \
 	pytorch-lightning \
 	tqdm \
 	pyyaml \
+   	 h5py \
 	nibabel \
 	matplotlib \
 	scikit-image \
 	scikit-learn \
 	msgpack-python \
+    	pyyaml\
 	regex \
-    pip
+    pip \
+    wheel \
+    pytest \
+    black \
+    mypy\
+    flake8
 
 RUN conda install -y \
 	opencv
 
-RUN pip install argparse monai
+RUN pip install argparse monai==0.4 runstats
 
 # Set the default command to python3
 CMD ["python3"]
