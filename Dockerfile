@@ -5,6 +5,8 @@ RUN apt update && apt upgrade -y
 # Install some basic utilities
 RUN apt-get install -y \
     curl \
+    vim \
+    emacs-nox \
     ca-certificates \
     sudo \
     git \
@@ -60,7 +62,7 @@ RUN conda install -y -c conda-forge \
 RUN conda install -y \
 	opencv
 
-RUN pip install argparse monai
+RUN pip install argparse monai adabelief-pytorch==0.2.0
 
 # Set the default command to python3
 CMD ["python3"]
