@@ -30,7 +30,7 @@ RUN chmod 777 /home/user
 RUN chmod 777 /workdir
 
 # Install Miniconda and Python 3.7
-ENV CONDA_AUTO_UPDATE_CONDA=false
+ENV CONDA_AUTO_UPDATE_CONDA=true
 ENV PATH=/home/user/miniconda/bin:$PATH
 RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py37_4.8.2-Linux-x86_64.sh \
  && chmod +x ~/miniconda.sh \
@@ -62,7 +62,7 @@ RUN conda install -y -c conda-forge \
 RUN conda install -y \
 	opencv
 
-RUN pip install argparse monai adabelief-pytorch==0.2.0
+RUN pip install python-box einops argparse monai adabelief-pytorch==0.2.0
 
 # Set the default command to python3
 CMD ["python3"]
